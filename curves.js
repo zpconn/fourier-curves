@@ -1,29 +1,85 @@
-var drawnPath = new Path(),
-    fourierPath = new Path(),
-    center = new Point(window.innerWidth / 2, window.innerHeight / 2),
-    canvas = document.getElementById('myCanvas'),
-    points = [];
+var margin = {top: 0,
+	          right: 0,
+			  bottom: 0,
+			  left: 0},
+	width = window.innerWidth - margin.left - margin.right,
+	height = window.innerHeight - margin.top - margin.bottom;
 
-drawnPath.strokeColor = 'black';
-fourierPath.strokeColor = 'blue';
+var x = d3.scale.linear()
+	.domain([0, width])
+	.range([0, width]);
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+var y = d3.scale.linear()
+	.domain([0, height])
+	.range([0, height]);
 
-function fourierCoefficients(points, numPairs) {
-	var N = points.length;
-	var complexPoints = [];
-	points.forEach(function(point) {
-		complexPoints.push(math.complex(point.x, point.y));
+var line = d3.svg.line()
+	.x(function(d, i) { return x(d.re); })
+	.y(function(d, i) { return y(d.im); });
+
+var svg = d3.select("body").append("svg")
+	.attr("width", width + margin.left + margin.right)
+	.attr("height", height + margin.top + margin.bottom)
+	.on("click", mouseClick)
+	.append("g")
+	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var complexInputPoints = [],
+	pathData = [],
+	fourierPathData = [];
+
+var path = svg.append("path")
+	.datum(pathData)
+	.attr("class", "line")
+	.attr("d", line);
+
+var fourierPath = svg.append("path")
+	.datum(fourierPathData)
+	.attr("class", "fourierLine")
+	.attr("d", line);
+
+function mouseClick() {
+	var clickCoords = d3.mouse(this),
+		complexClickCoords = math.complex(clickCoords[0], clickCoords[1]);
+
+	complexInputPoints.push(complexClickCoords);
+	pathData.push(complexClickCoords);
+	path.attr("d", line);
+
+	if (complexInputPoints.length == 1) {
+		return;
+	}
+
+	var coefficients = fourierCoefficients(complexInputPoints, Math.floor(complexInputPoints.length/2) - 1),
+		complexCurvePoints = complexFourierPoints(coefficients);
+
+	while (fourierPathData.length > 0) {
+		fourierPathData.pop();
+	}
+
+	complexCurvePoints.forEach(function (p) {
+		fourierPathData.push(p);
 	});
 
-	coefficients = {};
+	fourierPathData.push(complexCurvePoints[0]);
+
+	fourierPath.transition()
+		       .duration(50)
+			   .ease("linear")
+			   .attr("d", line);
+}
+
+function fourierCoefficients(complexPoints, numPairs) {
+	var N = complexPoints.length,
+        coefficients = {};
+
 	for (var n = -numPairs; n <= numPairs; ++n) {
 		var coefficient = math.complex(1.0 / N, 0);
 
 		var sum = math.complex(0.0, 0.0);
 		for (var k = 0; k < N; ++k) {
-			var exponential = math.exp(math.chain(-2.0).multiply(Math.PI)
+			var exponential = math.exp(math.chain(-2.0)
+					                       .multiply(Math.PI)
 					                       .multiply(math.complex(0.0, 1.0))
 										   .multiply(n)
 										   .multiply(k)
@@ -39,11 +95,15 @@ function fourierCoefficients(points, numPairs) {
 	return coefficients;
 }
 
-function renderFourierPath(coefficients) {
-	for (var t = 0.0; t <= 1; t += 0.01) {
+function complexFourierPoints(coefficients) {
+	var points = [];
+
+	var step = 0.01;
+
+	for (var t = step; t <= 1; t += step) {
 		var sum = math.complex(0.0, 0.0);
 
-		for (var n = -Math.floor(points.length/2) + 1; n <= Math.floor(points.length/2) - 1; ++n) {
+		for (var n = -Math.floor(complexInputPoints.length/2) + 1; n <= Math.floor(complexInputPoints.length/2) - 1; ++n) {
 			var exponential = math.exp(math.chain(2.0)
 					                       .multiply(Math.PI)
 										   .multiply(math.complex(0.0, 1.0))
@@ -53,18 +113,9 @@ function renderFourierPath(coefficients) {
 			sum = math.add(sum, math.multiply(coefficients[n], exponential));
 		}
 
-		fourierPath.lineTo(new Point(sum.re, sum.im));
+		points.push(sum);
 	}
-}
 
-function onMouseDown(event) {
-	drawnPath.lineTo(event.point);
-	points.push(event.point);
-}
-
-function onKeyDown(event) {
-	if (event.key == 'd') {
-		renderFourierPath(fourierCoefficients(points, Math.floor(points.length/2) - 1));
-	}
+	return points;
 }
 

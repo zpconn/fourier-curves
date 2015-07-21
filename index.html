@@ -1,13 +1,26 @@
 <!DOCTYPE html>
-<html>
-	<head>
-		<script type="text/javascript" src="paper-full.js"></script>
-		<script src="http://cdnjs.cloudflare.com/ajax/libs/mathjs/1.7.0/math.min.js"></script>
-		<script type="text/paperscript" src="curves.js" canvas="myCanvas">
-		</script>
-	</head>
+	<meta charset="utf-8">
+	<style>
+		svg {
+			font: 10px sans-serif;
+		}
+
+		.line {
+			fill: none;
+			stroke: #000;
+			stroke-width: 1.5px;
+		}
+
+		.fourierLine {
+			fill: none;
+			stroke: steelblue;
+			stroke-width: 1.5px;
+		}
+	</style>
 	<body>
-		<canvas id="myCanvas" resize></canvas>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+		<script src="http://cdnjs.cloudflare.com/ajax/libs/mathjs/1.7.0/math.min.js"></script>
+		<script src="curves.js"></script>
 	</body>
 </html>
 
