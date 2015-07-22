@@ -93,7 +93,7 @@ function mouseClick() {
 }
 
 function createAssemblage(coefficients) {
-	var positions = computeAssemblagePositions(coefficients, 0),
+	var positions = computeAssemblagePositions(coefficients, time),
 		prevPosition = math.complex(0.0, 0.0),
 		idx = -Math.floor(complexInputPoints.length/2) + 1;
 
@@ -110,7 +110,7 @@ function createAssemblage(coefficients) {
 	positions.forEach(function (p) {
 		var dot = svg.append("circle")
 			.attr("class", "dot")
-			.attr("r", 1)
+			.attr("r", 1.5)
 			.attr("transform", "translate(" + [p.re + screenCenterX, p.im + screenCenterY] + ")");
 
 	    dots.push(dot);
